@@ -1,18 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/mongodb";
-import Post from "@/models/Post";
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
+import { postStore } from "@/lib/store";
 
 export async function GET(req: NextRequest) {
-  await dbConnect();
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status");
   const category = searchParams.get("category");
@@ -21,19 +10,13 @@ export async function GET(req: NextRequest) {
   if (status) filter.status = status;
   if (category) filter.category = category;
 
-  const posts = await Post.find(filter).sort({ createdAt: -1 }).lean();
-  return NextResponse.json(posts);
+  return NextResponse.json(postStore.findAll(filter));
 }
 
 export async function POST(req: NextRequest) {
-  await dbConnect();
   const body = await req.json();
-
-  const slug = slugify(body.title) + "-" + Date.now().toString(36);
-
-  const post = await Post.create({
+  const post = postStore.create({
     title: body.title,
-    slug,
     content: body.content,
     excerpt: body.excerpt,
     coverImage: body.coverImage || "",
@@ -42,6 +25,5 @@ export async function POST(req: NextRequest) {
     status: body.status || "draft",
     publishAt: body.publishAt || null,
   });
-
   return NextResponse.json(post, { status: 201 });
 }
