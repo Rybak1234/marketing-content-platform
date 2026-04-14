@@ -1,4 +1,7 @@
+const dns = require("dns");
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 require("dotenv").config({ path: ".env.local" });
 
 const PostSchema = new mongoose.Schema(
@@ -17,6 +20,19 @@ const PostSchema = new mongoose.Schema(
 );
 
 const Post = mongoose.model("Post", PostSchema);
+
+const UserSchema = new mongoose.Schema(
+  {
+    email: { type: String, unique: true },
+    passwordHash: String,
+    name: String,
+    role: { type: String, enum: ["admin", "editor", "viewer"], default: "viewer" },
+    active: { type: Boolean, default: true },
+  },
+  { timestamps: true }
+);
+
+const User = mongoose.model("User", UserSchema);
 
 const posts = [
   {
@@ -77,9 +93,19 @@ async function seed() {
   console.log("🔌 Connected to MongoDB");
 
   await Post.deleteMany({});
+  await User.deleteMany({});
   await Post.insertMany(posts);
 
+  const adminHash = await bcrypt.hash("admin123", 12);
+  const editorHash = await bcrypt.hash("editor123", 12);
+  await User.insertMany([
+    { email: "admin@contenthub.com", passwordHash: adminHash, name: "Admin", role: "admin", active: true },
+    { email: "editor@contenthub.com", passwordHash: editorHash, name: "Editor Demo", role: "editor", active: true },
+    { email: "viewer@contenthub.com", passwordHash: editorHash, name: "Viewer Demo", role: "viewer", active: true },
+  ]);
+
   console.log(`✅ Created ${posts.length} demo posts`);
+  console.log("✅ Created 3 users (admin@contenthub.com/admin123, editor@contenthub.com/editor123)");
   console.log("🎉 Seed completed!");
 
   await mongoose.disconnect();
