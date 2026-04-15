@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function NewPostPage() {
   const router = useRouter();
@@ -35,11 +36,12 @@ export default function NewPostPage() {
     });
 
     if (res.ok) {
+      toast.success('Publicación creada');
       router.push("/dashboard");
       router.refresh();
     } else {
       setSaving(false);
-      alert("Error al crear la publicación");
+      toast.error("Error al crear la publicación");
     }
   }
 

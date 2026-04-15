@@ -2,6 +2,7 @@
 
 import { useState, useEffect, FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
+import toast from "react-hot-toast";
 
 interface Post {
   _id: string;
@@ -56,11 +57,12 @@ export default function EditPostPage() {
     });
 
     if (res.ok) {
+      toast.success('Publicación actualizada');
       router.push("/dashboard");
       router.refresh();
     } else {
       setSaving(false);
-      alert("Error al actualizar");
+      toast.error("Error al actualizar");
     }
   }
 
@@ -70,11 +72,12 @@ export default function EditPostPage() {
 
     const res = await fetch(`/api/posts/${params.id}`, { method: "DELETE" });
     if (res.ok) {
+      toast.success('Publicación eliminada');
       router.push("/dashboard");
       router.refresh();
     } else {
       setDeleting(false);
-      alert("Error al eliminar");
+      toast.error("Error al eliminar");
     }
   }
 
